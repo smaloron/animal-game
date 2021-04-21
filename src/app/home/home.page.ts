@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { ToastController } from '@ionic/angular';
+
+
 
 @Component({
   selector: 'app-home',
@@ -73,6 +76,107 @@ export class HomePage {
     }
   ];
 
-  constructor() {}
+  // stockage de l'animal choisi
+  public chosenAnimal = null;
+
+  // Le temps maxi pour une réponse
+  private answerDelayInSecond = 30;
+
+  // Le temps restant pour une réponse
+  public secondsLeft = null;
+
+  // Le chrono pour les réponses
+  private timer = null;
+
+  // Stockage d'un objet audio HTML
+  private audio:HTMLAudioElement = null;
+
+  constructor(private toastCtrl: ToastController) { }
+  
+  public play() {
+    // Choisir un animal au hasard
+    let alea = Math.floor(Math.random() * this.animalList.length);
+    this.chosenAnimal = this.animalList[alea];
+
+    // Arrêter le son précédent
+    if (this.audio && ! this.audio.ended) {
+      this.audio.pause();
+    }
+
+    // Lancement du chrono
+    this.startTimer();
+
+    // Jouer un son
+    // Instanciation d'un objet audio avec le son que l'on veut jouer
+    this.audio = new Audio('/assets' + this.chosenAnimal.file);
+    // Chargement du son
+    this.audio.load();
+    // lecture du son
+    this.audio.play();
+  }
+
+  // Choix du joueur
+  public async guessAnimal(clickedAnimal) {
+
+    // Si aucun son n'a été joué 
+    // chosenAnimal est null
+    if (this.chosenAnimal == null) {
+      return;
+    }
+
+    // Le message à afficher
+    let message;
+    let toastColor = 'danger';
+
+    // Comparaison des animaux
+    // celui sur lequel le joueur a cliqué
+    // et celui dont on a joué le son
+    if (this.chosenAnimal.title == clickedAnimal.title) {
+      message = 'gagné';
+      toastColor = 'success';
+      this.resetGame();
+    } else {
+      message = 'essaye encore';
+    }
+
+    // Affichage du message
+    // dans un toast
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 1000,
+      position: 'top',
+      color: toastColor
+    });
+
+    toast.present();
+  }
+
+  // Mise à zéro du jeu
+  private resetGame() {
+    this.chosenAnimal = null;
+    this.audio = null;
+
+    this.secondsLeft = 0;
+    clearInterval(this.timer);
+  }
+
+  private startTimer() {
+    this.secondsLeft = this.answerDelayInSecond;
+
+    this.timer = setInterval(
+      () => {
+        // Décrémente le temps restant
+        this.secondsLeft--;
+        // S'il ne reste plus de temps
+        // on remet le jeu à zéro
+        if (this.secondsLeft == 0) {
+          this.resetGame();
+          // Annulation du chrono
+          clearInterval(this.timer);
+        }
+      },
+      1000
+    )
+  }
 
 }
