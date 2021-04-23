@@ -89,7 +89,12 @@ export class HomePage {
   private timer = null;
 
   // Stockage d'un objet audio HTML
-  private audio:HTMLAudioElement = null;
+  private audio: HTMLAudioElement = null;
+  
+  // nombre de coups 
+  public tries = 0;
+
+  private maxTries = 3;
 
   constructor(private toastCtrl: ToastController) { }
   
@@ -124,15 +129,22 @@ export class HomePage {
       return;
     }
 
+    // Incrémentation du nombre de coups
+    this.tries++;
     // Le message à afficher
     let message;
     let toastColor = 'danger';
 
+    if (this.tries > this.maxTries) {
+      message = "Vous avez dépassé le nombre de coups autorisés";
+      toastColor = "warning";
+      this.resetGame();
+    }
     // Comparaison des animaux
     // celui sur lequel le joueur a cliqué
     // et celui dont on a joué le son
-    if (this.chosenAnimal.title == clickedAnimal.title) {
-      message = 'gagné';
+    else if (this.chosenAnimal.title == clickedAnimal.title) {
+      message = 'gagné en ' + this.tries + ' coups';
       toastColor = 'success';
       this.resetGame();
     } else {
@@ -155,6 +167,8 @@ export class HomePage {
   private resetGame() {
     this.chosenAnimal = null;
     this.audio = null;
+
+    this.tries = 0;
 
     this.secondsLeft = 0;
     clearInterval(this.timer);
